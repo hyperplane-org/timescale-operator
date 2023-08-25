@@ -1,0 +1,27 @@
+# permissions for end users to view timescaledbmultinodes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: timescaledbmultinode-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: timescale-operator
+    app.kubernetes.io/part-of: timescale-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: timescaledbmultinode-viewer-role
+rules:
+- apiGroups:
+  - timescale.hyperplane.hu
+  resources:
+  - timescaledbmultinodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - timescale.hyperplane.hu
+  resources:
+  - timescaledbmultinodes/status
+  verbs:
+  - get

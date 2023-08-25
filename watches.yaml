@@ -1,0 +1,6 @@
+# Use the 'create api' subcommand to add watches to this file.
+- group: timescale.hyperplane.hu
+  version: v1alpha1
+  kind: TimescaledbMultinode
+  chart: helm-charts/timescaledb-multinode
+#+kubebuilder:scaffold:watch

@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- timescale_v1alpha1_timescaledbmultinode.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples
