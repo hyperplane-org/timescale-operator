@@ -66,4 +66,43 @@ rules:
   resources:
   - "jobs"
 
+##
+## Rules for timescale.hyperplane.hu/v1alpha1, Kind: TimescaledbSingle
+##
+- apiGroups:
+  - timescale.hyperplane.hu
+  resources:
+  - timescaledbsingles
+  - timescaledbsingles/status
+  - timescaledbsingles/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- verbs:
+  - "*"
+  apiGroups:
+  - "rbac.authorization.k8s.io"
+  resources:
+  - "rolebindings"
+  - "roles"
+- verbs:
+  - "*"
+  apiGroups:
+  - "apps"
+  resources:
+  - "statefulsets"
+- verbs:
+  - "*"
+  apiGroups:
+  - ""
+  resources:
+  - "configmaps"
+  - "serviceaccounts"
+  - "services"
+
 #+kubebuilder:scaffold:rules

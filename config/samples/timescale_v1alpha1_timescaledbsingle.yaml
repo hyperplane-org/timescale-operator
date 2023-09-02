@@ -1,0 +1,257 @@
+apiVersion: timescale.hyperplane.hu/v1alpha1
+kind: TimescaledbSingle
+metadata:
+  name: timescaledbsingle-sample
+spec:
+  # Default values copied from <project_dir>/helm-charts/timescaledb-single/values.yaml
+  affinity: {}
+  backup:
+    enabled: false
+    env: null
+    envFrom: null
+    jobs:
+    - name: full-weekly
+      schedule: 12 02 * * 0
+      type: full
+    - name: incremental-daily
+      schedule: 12 02 * * 1-6
+      type: incr
+    pgBackRest:
+      compress-level: "3"
+      compress-type: lz4
+      process-max: 4
+      repo1-cipher-type: none
+      repo1-path: //release-name/
+      repo1-retention-diff: 2
+      repo1-retention-full: 2
+      spool-path: /var/run/postgresql
+      start-fast: "y"
+    pgBackRest:archive-get: {}
+    pgBackRest:archive-push: {}
+    resources: {}
+  bootstrapFromBackup:
+    enabled: false
+    repo1-path: null
+    secretName: pgbackrest-bootstrap
+  callbacks:
+    configMap: null
+  clusterName: ""
+  curlImage:
+    pullPolicy: Always
+    repository: curlimages/curl
+    tag: 7.87.0
+  debug:
+    execStartPre: null
+  env: null
+  envFrom: null
+  fullnameOverride: '{{ .Release.Name }}'
+  image:
+    pullPolicy: Always
+    repository: timescale/timescaledb-ha
+    tag: pg14.6-ts2.9.1-p1
+  networkPolicy:
+    enabled: false
+    ingress: null
+    prometheusApp: prometheus
+  nodeSelector: {}
+  patroni:
+    bootstrap:
+      dcs:
+        loop_wait: 10
+        maximum_lag_on_failover: 33554432
+        postgresql:
+          parameters:
+            archive_command: /etc/timescaledb/scripts/pgbackrest_archive.sh %p
+            archive_mode: "on"
+            archive_timeout: 1800s
+            autovacuum_analyze_scale_factor: 0.02
+            autovacuum_max_workers: 10
+            autovacuum_naptime: 5s
+            autovacuum_vacuum_cost_limit: 500
+            autovacuum_vacuum_scale_factor: 0.05
+            hot_standby: "on"
+            log_autovacuum_min_duration: 1min
+            log_checkpoints: "on"
+            log_connections: "on"
+            log_disconnections: "on"
+            log_line_prefix: '%t [%p]: [%c-%l] %u@%d,app=%a [%e] '
+            log_lock_waits: "on"
+            log_min_duration_statement: 1s
+            log_statement: ddl
+            max_connections: 100
+            max_prepared_transactions: 150
+            shared_preload_libraries: timescaledb,pg_stat_statements
+            ssl: "on"
+            ssl_cert_file: /etc/certificate/tls.crt
+            ssl_key_file: /etc/certificate/tls.key
+            tcp_keepalives_idle: 900
+            tcp_keepalives_interval: 100
+            temp_file_limit: 1GB
+            timescaledb.passfile: ../.pgpass
+            unix_socket_directories: /var/run/postgresql
+            unix_socket_permissions: "0750"
+            wal_level: hot_standby
+            wal_log_hints: "on"
+          use_pg_rewind: true
+          use_slots: true
+        retry_timeout: 10
+        ttl: 30
+      method: restore_or_initdb
+      post_init: /etc/timescaledb/scripts/post_init.sh
+      restore_or_initdb:
+        command: |
+          /etc/timescaledb/scripts/restore_or_initdb.sh --encoding=UTF8 --locale=C.UTF-8
+        keep_existing_recovery_conf: true
+    kubernetes:
+      role_label: role
+      scope_label: cluster-name
+      use_endpoints: true
+    log:
+      level: WARNING
+    postgresql:
+      authentication:
+        replication:
+          username: standby
+        superuser:
+          username: postgres
+      basebackup:
+      - waldir: /var/lib/postgresql/wal/pg_wal
+      callbacks:
+        on_reload: /etc/timescaledb/scripts/patroni_callback.sh
+        on_restart: /etc/timescaledb/scripts/patroni_callback.sh
+        on_role_change: /etc/timescaledb/scripts/patroni_callback.sh
+        on_start: /etc/timescaledb/scripts/patroni_callback.sh
+        on_stop: /etc/timescaledb/scripts/patroni_callback.sh
+      create_replica_methods:
+      - pgbackrest
+      - basebackup
+      listen: 0.0.0.0:5432
+      pg_hba:
+      - local     all             postgres                              peer
+      - local     all             all                                   md5
+      - hostnossl all,replication all                all                reject
+      - hostssl   all             all                127.0.0.1/32       md5
+      - hostssl   all             all                ::1/128            md5
+      - hostssl   replication     standby            all                md5
+      - hostssl   all             all                all                md5
+      pgbackrest:
+        command: /etc/timescaledb/scripts/pgbackrest_restore.sh
+        keep_data: true
+        no_master: true
+        no_params: true
+      recovery_conf:
+        restore_command: /etc/timescaledb/scripts/pgbackrest_archive_get.sh %f "%p"
+      use_unix_socket: true
+    restapi:
+      listen: 0.0.0.0:8008
+  persistentVolumes:
+    data:
+      accessModes:
+      - ReadWriteOnce
+      annotations: {}
+      enabled: true
+      mountPath: /var/lib/postgresql
+      size: 2Gi
+      subPath: ""
+    wal:
+      accessModes:
+      - ReadWriteOnce
+      annotations: {}
+      enabled: true
+      mountPath: /var/lib/postgresql/wal
+      size: 1Gi
+      storageClass: null
+      subPath: ""
+  pgBouncer:
+    config:
+      default_pool_size: 12
+      max_client_conn: 500
+      pool_mode: transaction
+      server_reset_query: DISCARD ALL
+    enabled: false
+    pg_hba:
+    - local     all postgres                   peer
+    - host      all postgres,standby 0.0.0.0/0 reject
+    - host      all postgres,standby ::0/0     reject
+    - hostssl   all all              0.0.0.0/0 md5
+    - hostssl   all all              ::0/0     md5
+    - hostnossl all all              0.0.0.0/0 reject
+    - hostnossl all all              ::0/0     reject
+    port: 6432
+    userListSecretName: null
+  podAnnotations: {}
+  podLabels: {}
+  podManagementPolicy: OrderedReady
+  podMonitor:
+    enabled: false
+    interval: 10s
+    path: /metrics
+  postInit:
+  - configMap:
+      name: custom-init-scripts
+      optional: true
+  - secret:
+      name: custom-secret-scripts
+      optional: true
+  prometheus:
+    args: []
+    enabled: false
+    env: null
+    image:
+      pullPolicy: Always
+      repository: quay.io/prometheuscommunity/postgres-exporter
+      tag: v0.11.1
+    volumeMounts: null
+    volumes: null
+  rbac:
+    create: true
+  readinessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 5
+    periodSeconds: 30
+    successThreshold: 1
+    timeoutSeconds: 5
+  replicaCount: 3
+  resources: {}
+  secrets:
+    certificate:
+      tls.crt: ""
+      tls.key: ""
+    certificateSecretName: ""
+    credentials:
+      PATRONI_REPLICATION_PASSWORD: ""
+      PATRONI_SUPERUSER_PASSWORD: ""
+      PATRONI_admin_PASSWORD: ""
+    credentialsSecretName: ""
+    pgbackrest: {}
+    pgbackrestSecretName: ""
+  service:
+    primary:
+      annotations: {}
+      labels: {}
+      nodePort: null
+      port: 5432
+      spec: {}
+      type: ClusterIP
+    replica:
+      annotations: {}
+      labels: {}
+      nodePort: null
+      port: 5432
+      spec: {}
+      type: ClusterIP
+  serviceAccount:
+    annotations: {}
+    create: true
+    name: null
+  sharedMemory:
+    useMount: false
+  timescaledbTune:
+    args: {}
+    enabled: true
+  tolerations: []
+  topologySpreadConstraints: []
+  version: null
+  
+  

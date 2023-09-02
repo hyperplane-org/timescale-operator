@@ -3,4 +3,5 @@
 # It should be run by config/default
 resources:
 - bases/timescale.hyperplane.hu_timescaledbmultinodes.yaml
+- bases/timescale.hyperplane.hu_timescaledbsingles.yaml
 #+kubebuilder:scaffold:crdkustomizeresource

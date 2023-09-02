@@ -3,4 +3,8 @@
   version: v1alpha1
   kind: TimescaledbMultinode
   chart: helm-charts/timescaledb-multinode
+- group: timescale.hyperplane.hu
+  version: v1alpha1
+  kind: TimescaledbSingle
+  chart: helm-charts/timescaledb-single
 #+kubebuilder:scaffold:watch

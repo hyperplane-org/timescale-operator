@@ -1,0 +1,31 @@
+# permissions for end users to edit timescaledbsingles.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: timescaledbsingle-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: timescale-operator
+    app.kubernetes.io/part-of: timescale-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: timescaledbsingle-editor-role
+rules:
+- apiGroups:
+  - timescale.hyperplane.hu
+  resources:
+  - timescaledbsingles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - timescale.hyperplane.hu
+  resources:
+  - timescaledbsingles/status
+  verbs:
+  - get

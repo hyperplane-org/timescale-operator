@@ -17,4 +17,11 @@ resources:
   group: timescale
   kind: TimescaledbMultinode
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: hyperplane.hu
+  group: timescale
+  kind: TimescaledbSingle
+  version: v1alpha1
 version: "3"
